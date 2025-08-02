@@ -37,15 +37,42 @@ jobs:
     - name: Build Windows binaries
       run: |
         cd contrib/build-wine
-        chmod +x build.sh
-        # 设置可重现构建
-        ELECBUILD_COMMIT=HEAD ./build.sh
+        
+        # 检查Docker是否可用
+        docker --version
+        docker info
+        
+        # 使用CI专用的构建脚本（无交互式标志）
+        chmod +x build-ci.sh
+        echo "Using CI-friendly build script..."
+        
+        # 设置环境变量
+        export CI=true
+        
+        # 设置可重现构建并运行
+        echo "Starting build process..."
+        if ! ELECBUILD_COMMIT=HEAD ./build-ci.sh; then
+          echo "CI script failed, trying fallback method..."
+          chmod +x build.sh
+          sed -i 's/docker run -it/docker run/g' build.sh
+          ELECBUILD_COMMIT=HEAD ./build.sh
+        fi
     
     # 5. 列出生成的文件（用于调试）
     - name: List generated files
       run: |
         echo "Contents of contrib/build-wine/dist/:"
         ls -la contrib/build-wine/dist/ || echo "dist directory not found"
+        
+        # 如果构建失败，显示更多调试信息
+        if [ $? -ne 0 ]; then
+          echo "Build seems to have failed. Checking for logs..."
+          find contrib/build-wine/ -name "*.log" -exec cat {} \;
+          echo "Docker containers:"
+          docker ps -a
+          echo "Docker images:"
+          docker images
+        fi
     
     # 6. 上传构建好的exe文件
     - name: Upload Windows binaries
