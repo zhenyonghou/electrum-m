@@ -59,7 +59,7 @@ if [ ! -z "$ELECBUILD_COMMIT" ] ; then  # fresh clone (reproducible build)
     fi
 fi
 
-# NON-INTERACTIVE docker run - no -it flags
+# NON-INTERACTIVE docker run - no -it flags  
 # Use bash to execute script to avoid permission issues
 docker run \
     --name electrum-wine-builder-cont \
@@ -67,7 +67,7 @@ docker run \
     --rm \
     --workdir /opt/wine64/drive_c/electrum/contrib/build-wine \
     electrum-wine-builder-img \
-    bash make_win.sh
+    bash -c "bash fix-permissions.sh && bash make_win.sh"
 
 # make sure resulting binary location is independent of fresh_clone
 if [ ! -z "$ELECBUILD_COMMIT" ] ; then

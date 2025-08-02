@@ -21,7 +21,7 @@ docker run --rm \
     -v "$(pwd)/../..":/opt/wine64/drive_c/electrum \
     --workdir /opt/wine64/drive_c/electrum/contrib/build-wine \
     electrum-wine-builder-img \
-    bash make_win.sh
+    bash -c "bash fix-permissions.sh && bash make_win.sh"
 
 echo "Build completed!"
 echo "Checking for output files:"

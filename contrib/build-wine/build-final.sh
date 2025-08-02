@@ -58,6 +58,9 @@ docker run \
         ls -la ../make_libsecp256k1.sh 2>/dev/null || echo 'make_libsecp256k1.sh not accessible'
         ls -la ../build_tools_util.sh 2>/dev/null || echo 'build_tools_util.sh not accessible'
         
+        echo 'Running debug information check...'
+        bash debug-permissions.sh
+        
         echo 'Applying permission fixes to make_win.sh...'
         bash fix-permissions.sh
         

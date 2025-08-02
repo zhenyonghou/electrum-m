@@ -44,7 +44,7 @@ jobs:
         
         # 确保所有脚本都有执行权限
         echo "Setting execute permissions for scripts..."
-        chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh
+        chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh fix-permissions.sh debug-permissions.sh
         
         # 递归设置整个项目的脚本权限（非常重要！）
         echo "Setting permissions for ALL shell scripts in the project..."
@@ -118,7 +118,7 @@ jobs:
               -v "$(pwd)/../..":/opt/wine64/drive_c/electrum \
               --workdir /opt/wine64/drive_c/electrum/contrib/build-wine \
               electrum-wine-builder-img \
-              bash -c "echo 'Manual Docker run - executing make_win.sh with bash'; bash make_win.sh"
+              bash -c "echo 'Manual Docker run - applying fixes and executing make_win.sh'; bash fix-permissions.sh && bash make_win.sh"
               
             # 检查最终结果
             if [ ! -f "dist/*.exe" ] && [ ! -f "../../contrib/build-wine/dist/*.exe" ]; then

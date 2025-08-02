@@ -50,7 +50,10 @@ docker run \
         echo 'File permissions check:'
         ls -la make_win.sh
         
-        echo 'Starting make_win.sh with bash (no execute permission needed)...'
+        echo 'Applying permission fixes first...'
+        bash fix-permissions.sh
+        
+        echo 'Starting patched make_win.sh with bash (no execute permission needed)...'
         bash make_win.sh
         
         echo 'Build completed, checking results:'

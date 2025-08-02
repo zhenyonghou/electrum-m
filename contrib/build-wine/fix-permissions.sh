@@ -24,4 +24,13 @@ sed -i 's|\./\([^[:space:]]*\.sh\)|bash ./\1|g' make_win.sh
 
 echo "Script execution fixes applied to make_win.sh"
 echo "Changes made:"
-diff make_win.sh.backup make_win.sh || echo "No differences to show (diff returned non-zero)" 
+diff make_win.sh.backup make_win.sh || echo "No differences to show (diff returned non-zero)"
+
+echo ""
+echo "Verifying the patched make_win.sh:"
+echo "Looking for libsecp256k1 script call:"
+grep -n "make_libsecp256k1.sh" make_win.sh || echo "No libsecp256k1 script calls found"
+
+echo ""
+echo "Current make_win.sh around line 49:"
+sed -n '45,55p' make_win.sh 
