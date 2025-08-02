@@ -45,11 +45,24 @@ jobs:
         # 确保所有脚本都有执行权限
         echo "Setting execute permissions for scripts..."
         chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh
-        # 递归设置整个项目的脚本权限
-        find ../../ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+        
+        # 递归设置整个项目的脚本权限（非常重要！）
+        echo "Setting permissions for ALL shell scripts in the project..."
+        find ../../ -name "*.sh" -type f -exec chmod +x {} \; 2>/dev/null || true
+        
+        # 特别确保关键构建脚本有执行权限
+        echo "Ensuring critical build scripts have execute permissions..."
+        chmod +x ../../contrib/make_libsecp256k1.sh 2>/dev/null || true
+        chmod +x ../../contrib/make_libusb.sh 2>/dev/null || true
+        chmod +x ../../contrib/make_zbar.sh 2>/dev/null || true
+        chmod +x ../../contrib/build_tools_util.sh 2>/dev/null || true
+        
+        # 验证关键脚本权限
+        echo "Verifying critical script permissions:"
         ls -la *.sh
-        echo "Checking file permissions after chmod..."
-        ls -la make_win.sh
+        ls -la ../../contrib/make_libsecp256k1.sh 2>/dev/null || echo "make_libsecp256k1.sh not found"
+        ls -la ../../contrib/make_libusb.sh 2>/dev/null || echo "make_libusb.sh not found"
+        ls -la ../../contrib/build_tools_util.sh 2>/dev/null || echo "build_tools_util.sh not found"
         
         # 验证关键脚本确实可读
         echo "Testing if make_win.sh is readable:"

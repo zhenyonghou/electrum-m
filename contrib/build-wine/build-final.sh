@@ -44,10 +44,24 @@ docker run \
         echo '  Working dir: \$(pwd)'
         echo '  Home: \$HOME'
         
+        echo 'Setting permissions inside container for all scripts...'
+        # Note: We can't chmod mounted files, but we can try
+        find /opt/wine64/drive_c/electrum -name '*.sh' -type f 2>/dev/null | head -10 | while read file; do
+            echo \"Found script: \$file\"
+            ls -la \"\$file\" 2>/dev/null || echo \"Cannot access \$file\"
+        done
+        
         echo 'Files in working directory:'
         ls -la
         
-        echo 'Running make_win.sh...'
+        echo 'Checking critical scripts:'
+        ls -la ../make_libsecp256k1.sh 2>/dev/null || echo 'make_libsecp256k1.sh not accessible'
+        ls -la ../build_tools_util.sh 2>/dev/null || echo 'build_tools_util.sh not accessible'
+        
+        echo 'Applying permission fixes to make_win.sh...'
+        bash fix-permissions.sh
+        
+        echo 'Running patched make_win.sh with bash...'
         bash make_win.sh
     "
 
