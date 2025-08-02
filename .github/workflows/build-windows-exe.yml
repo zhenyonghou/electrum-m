@@ -1,0 +1,72 @@
+name: Build Windows EXE
+
+# 触发条件：推送到main/master分支，或手动触发
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-windows-exe:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 检出代码（包含子模块）
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: 0  # 获取完整的git历史
+    
+    # 2. 设置Docker环境
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    # 3. 缓存Docker镜像层（可选，加速构建）
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+    
+    # 4. 构建Windows二进制文件
+    - name: Build Windows binaries
+      run: |
+        cd contrib/build-wine
+        chmod +x build.sh
+        # 设置可重现构建
+        ELECBUILD_COMMIT=HEAD ./build.sh
+    
+    # 5. 列出生成的文件（用于调试）
+    - name: List generated files
+      run: |
+        echo "Contents of contrib/build-wine/dist/:"
+        ls -la contrib/build-wine/dist/ || echo "dist directory not found"
+    
+    # 6. 上传构建好的exe文件
+    - name: Upload Windows binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: electrum-windows-exe-${{ github.sha }}
+        path: |
+          contrib/build-wine/dist/*.exe
+          contrib/build-wine/dist/*.zip
+        retention-days: 30
+        if-no-files-found: error
+    
+    # 7. 创建Release（可选，仅在推送tag时）
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          contrib/build-wine/dist/*.exe
+          contrib/build-wine/dist/*.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
