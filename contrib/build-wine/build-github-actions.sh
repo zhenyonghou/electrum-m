@@ -31,7 +31,7 @@ find "$PROJECT_ROOT" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
 echo "Building Docker image..."
 docker build --no-cache -t electrum-wine-builder-img .
 
-# Run Docker container with explicit bash execution and permission handling
+# Run Docker container with explicit bash execution (no permission changes needed)
 echo "Running Docker container..."
 docker run \
     --name electrum-wine-builder-cont \
@@ -47,10 +47,10 @@ docker run \
         echo 'Files in current directory:'
         ls -la
         
-        echo 'Setting permissions inside container...'
-        chmod +x make_win.sh 2>/dev/null || true
+        echo 'File permissions check:'
+        ls -la make_win.sh
         
-        echo 'Starting make_win.sh...'
+        echo 'Starting make_win.sh with bash (no execute permission needed)...'
         bash make_win.sh
         
         echo 'Build completed, checking results:'

@@ -44,8 +44,19 @@ jobs:
         
         # 确保所有脚本都有执行权限
         echo "Setting execute permissions for scripts..."
-        chmod +x build-ci.sh build.sh make_win.sh
+        chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh
+        # 递归设置整个项目的脚本权限
+        find ../../ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
         ls -la *.sh
+        echo "Checking file permissions after chmod..."
+        ls -la make_win.sh
+        
+        # 验证关键脚本确实可读
+        echo "Testing if make_win.sh is readable:"
+        head -5 make_win.sh || echo "Cannot read make_win.sh"
+        
+        # 检查文件系统类型（某些文件系统不支持执行权限）
+        df -T . || echo "Cannot check filesystem type"
         
         # 使用CI专用的构建脚本（无交互式标志）
         echo "Using CI-friendly build script..."
@@ -54,36 +65,57 @@ jobs:
         export CI=true
         
         # 设置可重现构建并运行
-        echo "Starting build process..."
+        echo "Starting build process with multiple fallback strategies..."
+        echo "Script priority order:"
+        echo "  1. build-final.sh - Handles UID mapping and all permissions"
+        echo "  2. build-simple.sh - Simple Docker execution"
+        echo "  3. build-github-actions.sh - GitHub Actions optimized"
+        echo "  4. build-ci.sh - CI environment script"
+        echo "  5. build.sh (modified) - Original script with TTY fixes"
+        echo "  6. Manual Docker - Last resort"
+        echo ""
         
-        # 首先尝试GitHub Actions专用脚本
-        chmod +x build-github-actions.sh
-        if ./build-github-actions.sh; then
-          echo "===== GitHub Actions script succeeded ====="
-        elif ELECBUILD_COMMIT=HEAD ./build-ci.sh; then
-          echo "===== CI script succeeded ====="
+        # 首先尝试最终脚本（处理用户ID映射）
+        echo "=== Trying Method 1: Final script with UID mapping ==="
+        if ./build-final.sh; then
+         echo "===== Final script succeeded ====="
         else
-          echo "===== CI script failed, trying fallback methods ====="
-          
-          # 方法1：修改原始脚本移除交互式标志
-          echo "Trying fallback method 1: modified original script..."
+          echo "=== Trying Method 2: Simple script ==="
+          if ./build-simple.sh; then
+            echo "===== Simple script succeeded ====="
+          else
+            echo "=== Trying Method 3: GitHub Actions script ==="
+            if ./build-github-actions.sh; then
+              echo "===== GitHub Actions script succeeded ====="
+            else
+              echo "=== Trying Method 4: CI script ==="
+              if ELECBUILD_COMMIT=HEAD ./build-ci.sh; then
+                echo "===== CI script succeeded ====="
+              else
+                echo "=== Trying Method 5: Modified original script ==="
           sed -i 's/docker run -it/docker run/g' build.sh
           # 同时修改docker命令使用bash执行
-          sed -i 's|./make_win.sh|bash make_win.sh|g' build.sh
-          if ! ELECBUILD_COMMIT=HEAD ./build.sh; then
-            echo "===== Fallback method 1 failed, trying method 2 ====="
-            
-            # 方法2：直接运行Docker命令
-            echo "Building Docker image manually..."
+                           sed -i 's|./make_win.sh|bash make_win.sh|g' build.sh
+                 if ELECBUILD_COMMIT=HEAD ./build.sh; then
+                   echo "===== Modified original script succeeded ====="
+                 else
+                   echo "=== Trying Method 6: Manual Docker commands ==="
+                   echo "Building Docker image manually..."
             docker build -t electrum-wine-builder-img .
             echo "Running Docker container manually..."
                          docker run --rm \
                -v "$(pwd)/../..":/opt/wine64/drive_c/electrum \
                --workdir /opt/wine64/drive_c/electrum/contrib/build-wine \
                electrum-wine-builder-img \
-               bash -c "chmod +x make_win.sh && bash make_win.sh"
+                       bash -c "echo 'Manual Docker run - executing make_win.sh with bash'; bash make_win.sh"
+                   else
+                     echo "===== ALL BUILD METHODS FAILED ====="
+                     echo "Please check the debug information below for details."
+                   fi
+                 fi
+               fi
+             fi
            fi
-         fi
         fi
     
     # 5. 列出生成的文件（用于调试）
