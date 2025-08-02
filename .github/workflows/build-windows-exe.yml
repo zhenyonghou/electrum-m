@@ -44,7 +44,7 @@ jobs:
         
         # 确保所有脚本都有执行权限
         echo "Setting execute permissions for scripts..."
-        chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh fix-permissions.sh debug-permissions.sh
+        chmod +x build-ci.sh build.sh make_win.sh build-github-actions.sh build-simple.sh build-final.sh fix-permissions.sh debug-permissions.sh build-ultimate.sh
         
         # 递归设置整个项目的脚本权限（非常重要！）
         echo "Setting permissions for ALL shell scripts in the project..."
@@ -78,19 +78,22 @@ jobs:
         export CI=true
         
         # 设置可重现构建并运行
-        echo "Starting build process with multiple fallback strategies..."
-        echo "Script priority order:"
-        echo "  1. build-final.sh - Handles UID mapping and all permissions"
-        echo "  2. build-simple.sh - Simple Docker execution"
-        echo "  3. build-github-actions.sh - GitHub Actions optimized"
-        echo "  4. build-ci.sh - CI environment script"
-        echo "  5. build.sh (modified) - Original script with TTY fixes"
-        echo "  6. Manual Docker - Last resort"
+        echo "Starting build process with ULTIMATE zero-permission solution..."
+        echo "🚀 Script priority order:"
+        echo "  1. build-ultimate.sh - 🎯 ULTIMATE: Zero permission dependencies"
+        echo "  2. build-final.sh - Handles UID mapping and all permissions"
+        echo "  3. build-simple.sh - Simple Docker execution"
+        echo "  4. build-github-actions.sh - GitHub Actions optimized"
+        echo "  5. build-ci.sh - CI environment script"
+        echo "  6. build.sh (modified) - Original script with TTY fixes"
+        echo "  7. Manual Docker - Last resort"
         echo ""
         
-        # 首先尝试最终脚本（处理用户ID映射）
-        echo "=== Trying Method 1: Final script with UID mapping ==="
-        if ./build-final.sh; then
+        # 首先尝试终极脚本（完全绕过权限问题）
+        echo "=== 🎯 Trying Method 1: ULTIMATE zero-permission script ==="
+        if ./build-ultimate.sh; then
+          echo "===== 🎉 ULTIMATE script succeeded! ====="
+        elif ./build-final.sh; then
           echo "===== Final script succeeded ====="
         elif ./build-simple.sh; then
           echo "===== Simple script succeeded ====="
